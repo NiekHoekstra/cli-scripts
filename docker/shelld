@@ -27,7 +27,7 @@ function interactive
   echo "Index | Container ID | Name"
   for i in "${!array[@]}"
   do
-    echo "$i | ${array[i]}"
+    printf "%5s | %s\n" "$i" "${array[i]}"
   done
   echo ""
 
