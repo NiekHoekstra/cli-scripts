@@ -1,0 +1,64 @@
+#!/bin/bash
+
+argc=$#
+function help
+{
+  if [ $# -eq 1 ] && [ $1 = "err" ]; then
+    echo -e "\e[31m"  # is error, color red.
+  fi
+  echo "Expected 1 argument, received $argc." >&2  # Error to stderr
+  echo -e "\e[39m"
+  echo "Usage: shelld CONTAINER"
+  echo ""
+  echo "Container ID | Name"
+  sudo docker ps --format "{{.ID}} | {{.Names}}"
+  echo ""
+  echo "Opens a bash shell in the docker container."
+}
+
+function interactive
+{
+  dockers=`sudo docker ps --format "{{.ID}} | {{.Names}}"`
+  if [ $? -ne 0 ]; then
+    exit $?  # about if the command fails
+  fi
+
+  IFS=$'\n' read -d '' -r -a array <<< "$dockers"
+  echo "Index | Container ID | Name"
+  for i in "${!array[@]}"
+  do
+    echo "$i | ${array[i]}"
+  done
+  echo ""
+
+  echo "Enter container index:"
+  read -p '[quit]:' x
+
+
+  if [[ "$x" = "" ]]; then
+    exit 0
+  fi
+
+  IFS='|' read -d '' -r -a container <<< "${array[x]}"
+  echo "Selected:${container[1]}"
+  docker exec -it $container bash
+  exit $?
+
+}
+
+if [ $argc -eq 0 ]; then
+  interactive
+fi
+
+if [ $argc -eq 1 ]; then
+  if [ $1 = "--help" ]; then
+    help
+    exit 0
+  fi
+  docker exec -it $1 bash
+  exit $?  # return status code of docker exec
+fi
+
+
+
+
